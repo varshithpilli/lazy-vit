@@ -2,20 +2,20 @@ let nav = () => {
   if (!document.URL.includes("vtopcc.vit.ac.in")) return;
   if (document.getElementById("viboot-navbar")) return;
 
-  const navbarHeader = document.querySelector(".navbar");
+  const navbarHeader = document.querySelector("#quickLinks");
   if (!navbarHeader) return;
 
   const container = document.createElement("div");
   container.id = "viboot-navbar";
-  container. className = "navbar-brand";
-  container.style. paddingTop = "20px";
+  // container.className = "navbar-brand";
+  container.style= `margin: 0 auto; text-align: center; width: fit-content;`;
 
   const createLink = (text, pageId) => {
     const link = document.createElement("a");
     link.textContent = text;
     link.className = "btnItem";
     link.style = "color: #fafafa; border-style: none; text-decoration: none; margin-left: 15px; font-size:15px; cursor: pointer;";
-    link.href = "#";
+    // link.href = "#";
 
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -35,8 +35,7 @@ let nav = () => {
   container.appendChild(createLink("Marks", "examinations/StudentMarkView"));
   container.appendChild(createLink("Calendar", "academics/common/CalendarPreview"));
   container.appendChild(createLink("Grade", "examinations/examGradeView/StudentGradeView"));
-  // container.appendChild(createLink("History", "examinations/examGradeView/StudentGradeHistory"));
-  navbarHeader.appendChild(container);
+  navbarHeader.replaceWith(container);
 };
 
 const initializeNavbar = () => {

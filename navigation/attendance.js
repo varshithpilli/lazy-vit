@@ -1,5 +1,4 @@
 let view_attendance_page = () => {
-	//Head edit
 	let table_head = document.getElementsByTagName("thead")[0].children[0].children;
 	let attendance_calc = table_head[0].cloneNode(true);
 	attendance_calc.innerText = "75% Attendance Alert";
@@ -8,7 +7,6 @@ let view_attendance_page = () => {
 	table_head[13].style.display = "none";
 	table_head[6].style.display = "none";
 	
-	//Body Edit
 	let body = document.getElementsByTagName("tbody");
 	let body_row = body[0].querySelectorAll("tr");
 	body_row.forEach((row) => {
@@ -34,10 +32,6 @@ let view_attendance_page = () => {
 				: 37;
 
 			if (attended_classes / tot_classes < 0.7401) {
-				//To maintain exact 75%
-				// let req_classes = Math.ceil((3 * (tot_classes)) - (4 * (attended_classes)));
-
-				//Calculates the attendance to 74.01% (as vit consider it as 75%)
 				let req_classes = Math.ceil(
 					(0.7401 * tot_classes - attended_classes) / 0.2599
 				);
@@ -60,10 +54,6 @@ let view_attendance_page = () => {
 					row.innerHTML = new_Table_Content.join("");
 				}
 			} else {
-				//For Exact 75% attendance
-				// let bunk_classes = Math.floor(((4 / 3) * (attended_classes)) - tot_classes);
-
-				//For 74.01% which vit calculates it as 75%
 				let bunk_classes = Math.floor(
 					(attended_classes - 0.7401 * tot_classes) / 0.7401
 				);
