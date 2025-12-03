@@ -1,22 +1,22 @@
 let facultyRatingsData = [];
 
-// Get color based on rating value
+// Get color based on rating value (scale of 10)
 function getRatingColor(rating) {
-  if (rating >= 4.5) return '#4CAF50'; // Green
-  if (rating >= 4.0) return '#8BC34A'; // Light green
-  if (rating >= 3.5) return '#FFC107'; // Yellow
-  if (rating >= 3.0) return '#FF9800'; // Orange
-  return '#F44336'; // Red
+  if (rating >= 9.0) return '#4CAF50';
+  if (rating >= 8.0) return '#8BC34A';
+  if (rating >= 7.0) return '#FFC107';
+  if (rating >= 6.0) return '#FF9800';
+  return '#F44336';
 }
 
-// Create a progress bar for rating
+// Create a progress bar for rating (scale of 10)
 function createRatingBar(rating) {
   const barContainer = document.createElement('div');
   barContainer.className = 'rating-bar-container';
   
   const bar = document.createElement('div');
   bar.className = 'rating-bar';
-  bar.style.width = `${rating * 20}%`; // Convert 0-5 scale to 0-100%
+  bar.style.width = `${rating * 10}%`;
   bar.style.backgroundColor = getRatingColor(rating);
   
   barContainer.appendChild(bar);
@@ -178,10 +178,31 @@ function importFacultyRatingsFromFile(file) {
       const jsonData = JSON.parse(e.target.result);
       if (Array.isArray(jsonData)) {
         facultyRatingsData = jsonData;
-        // Save to Chrome storage
+        console.log('Imported faculty ratings:', facultyRatingsData);
+        // Save to Chrome storage with proper key
         chrome.storage.local.set({ facultyRatings: facultyRatingsData }, function() {
-          console.log('Faculty ratings saved to storage');
+          console.log('Faculty ratings saved to storage successfully');
+          // Verify the data was saved
+          chrome.storage.local.get(['facultyRatings'], function(result) {
+            console.log('Verification - Retrieved from storage:', result);
+          });
           displayRatings();
+          
+          // Notify content scripts that ratings have been updated
+          try {
+            chrome.runtime.sendMessage({
+              type: 'FACULTY_RATINGS_UPDATED',
+              data: facultyRatingsData
+            }, function(response) {
+              if (chrome.runtime.lastError) {
+                console.log('Message send error (expected if no content scripts are listening):', chrome.runtime.lastError.message);
+              } else {
+                console.log('Message sent to content scripts:', response);
+              }
+            });
+          } catch (error) {
+            console.log('Messaging error (expected if no content scripts are listening):', error);
+          }
         });
       } else {
         alert('Invalid JSON format. Please provide an array of faculty objects.');
@@ -196,15 +217,31 @@ function importFacultyRatingsFromFile(file) {
 // Load faculty ratings from Chrome storage
 function loadFacultyRatings() {
   chrome.storage.local.get(['facultyRatings'], function(result) {
+    console.log('Loading faculty ratings from storage:', result);
     if (result.facultyRatings) {
       facultyRatingsData = result.facultyRatings;
+      console.log('Loaded faculty ratings data:', facultyRatingsData);
       displayRatings();
+    } else {
+      console.log('No faculty ratings found in storage');
     }
   });
 }
 
+// Listen for messages from content scripts
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  console.log('Received message:', request);
+  if (request.type === 'GET_FACULTY_RATINGS') {
+    console.log('Sending faculty ratings data:', facultyRatingsData);
+    sendResponse({ facultyRatings: facultyRatingsData });
+    return true; // Keep the message channel open for async response
+  }
+});
+
 // Initialize faculty ratings page
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('Faculty ratings page loaded');
+  
   // Load existing ratings
   loadFacultyRatings();
   
@@ -214,10 +251,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const backButton = document.getElementById('backButton');
   
   importBtn.addEventListener('click', function() {
+    console.log('Import button clicked');
     fileInput.click();
   });
   
   fileInput.addEventListener('change', function(e) {
+    console.log('File selected:', e.target.files);
     if (e.target.files.length > 0) {
       importFacultyRatingsFromFile(e.target.files[0]);
     }
