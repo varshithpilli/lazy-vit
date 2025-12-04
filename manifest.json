@@ -2,15 +2,27 @@
   "manifest_version": 3,
   "name": "Lazy VITC",
   "version": "1.1",
+  "background": {
+    "service_worker": "service-worker.js"
+  },
   "permissions": [
     "scripting",
     "activeTab",
-    "storage"
+    "storage",
+    "sidePanel"
   ],
+  "side_panel": {
+    "default_path": "sidebar/sidebar.html"
+  },
   "web_accessible_resources": [
     {
       "resources": [
-        "weights.json"
+        "weights.json",
+        "sidebar/sidebar.js",
+        "sidebar/facultyRatings.js",
+        "sidebar/ffcs.js",
+        "sidebar/example.js",
+        "navigation/facultyRatingsInjector.js"
       ],
       "matches": [
         "*://vtopcc.vit.ac.in/*",
@@ -32,7 +44,9 @@
         "navigation/attendance.js",
         "navigation/marks.js",
         "navigation/nav.js",
-        "navigation/detector.js"
+        "navigation/detector.js",
+        "navigation/facultyRatingsInjector.js",
+        "sidebar/ffcs.js"
       ]
     }
   ]

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 100%;
+      min-width: 250px;
+      margin: 0;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      box-sizing: border-box;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .back-button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #007bff;
+      padding: 5px;
+      margin-right: 10px;
+    }
+    
+    h1 {
+      color: #007bff;
+      text-align: center;
+      margin: 0;
+      font-size: 18px;
+      flex-grow: 1;
+    }
+    
+    .import-section {
+      margin-bottom: 15px;
+      text-align: center;
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #importBtn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    #importBtn:hover {
+      background-color: #0056b3;
+    }
+    
+    #fileInput {
+      display: none;
+    }
+    
+    .ratings-container {
+      margin-top: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .rating-item {
+      background-color: white;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .faculty-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .faculty-info {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    
+    .faculty-name {
+      font-weight: bold;
+      font-size: 14px;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-grow: 1;
+      margin-right: 5px;
+    }
+    
+    .faculty-id {
+      font-size: 10px;
+      color: #666;
+      background-color: #f0f0f0;
+      padding: 1px 4px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    
+    .rating-value {
+      padding: 2px 6px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    
+    .rating-details {
+      margin-top: 8px;
+      width: 100%;
+    }
+    
+    .rating-row {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 6px;
+      font-size: 11px;
+      width: 100%;
+    }
+    
+    .rating-label-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+    
+    .rating-label {
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .rating-value-display {
+      color: #333;
+      font-weight: bold;
+    }
+    
+    .rating-bar-container {
+      width: 100%;
+      background-color: #f0f0f0;
+      height: 4px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .rating-bar {
+      height: 100%;
+      border-radius: 2px;
+    }
+    
+    .no-ratings {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px 10px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 12px;
+    }
+    
+    .last-updated {
+      font-size: 9px;
+      color: #999;
+      text-align: right;
+      margin-top: 5px;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="back-button" id="backButton">←</button>
+    <h1>Faculty Ratings</h1>
+  </div>
+  
+  <div class="import-section">
+    <input type="file" id="fileInput" accept=".json">
+    <button id="importBtn">Import Faculty Ratings JSON</button>
+    <p style="font-size: 10px; color: #666; margin: 3px 0 0;">Select a JSON file with faculty ratings</p>
+  </div>
+  
+  <div class="ratings-container">
+    <div id="ratingsList">
+      <div class="no-ratings">No ratings imported yet. Please import a JSON file.</div>
+    </div>
+  </div>
+  
+  <script src="facultyRatings.js"></script>
+</body>
+</html>

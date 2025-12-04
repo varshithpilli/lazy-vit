@@ -42,11 +42,15 @@ function detectPage() {
 
   try {
     const h3Text = document.querySelector('h3')?.textContent || '';
+    const allHeadings = Array.from(document.querySelectorAll('h3, h2, h1')).map(h => h.textContent);
 
-    if (
+    // Check for attendance page
+    const isAttendancePage = 
       h3Text.includes('Attendance Details') ||
-      document.querySelector('table[id*="attendance"]')
-    ) {
+      allHeadings.some(h => h.includes('Student Attendance Details')) ||
+      document.querySelector('table[id*="attendance"]');
+
+    if (isAttendancePage) {
       isSelfMutating = true;
       try {
         view_attendance_page();
@@ -55,6 +59,7 @@ function detectPage() {
       }
     }
 
+    // Check for marks page
     if (h3Text.includes('Marks View')) {
       isSelfMutating = true;
       try {
@@ -62,6 +67,16 @@ function detectPage() {
       } finally {
         isSelfMutating = false;
       }
+    }
+    
+    // Check for timetable page
+    const isTimetablePage = 
+      h3Text.includes('Time Table') ||
+      allHeadings.some(h => h.includes('Time Table'));
+      
+    if (isTimetablePage) {
+      // Timetable page detected - faculty ratings will be injected by facultyRatingsInjector.js
+      console.log('Timetable page detected');
     }
   } finally {
     if (debounceHandle) {
@@ -75,11 +90,11 @@ function detectPage() {
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => detectPage(), 500);
+    setTimeout(() => detectPage(), 1000);
     startObserving();
   });
 } else {
-  setTimeout(() => detectPage(), 500);
+  setTimeout(() => detectPage(), 1000);
   startObserving();
 }
 
@@ -91,4 +106,4 @@ setTimeout(() => {
   } finally {
     isSelfMutating = false;
   }
-}, 1000);
+}, 1500);
