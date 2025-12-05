@@ -25,6 +25,13 @@ Works only on VIT Chennai websites:
 - `vtopcc.vit.ac.in`
 - `vtopregcc.vit.ac.in` (captcha accuracy slightly lower)
 
+## During FFCS
+- Sidebar in which you can tweak things that make FFCS a bit easier.
+- Automatically fills the second captcha and also skips the 5 second wait time after the first login.
+- Import the faculty ratings from a JSON (later would be automatically synced from VIT Verse)
+- Sort the faculties based on rating.
+- Highlight keywords like slot or faculty beforehand so you dont have to search at every page.
+
 ## How to Install
 1. Download or clone this repository.  
 2. Open your browser’s extensions page:  
@@ -37,6 +44,7 @@ The extension will:
 - Auto-solve captchas  
 - Add quick navigation buttons  
 - Clean up the page view  
+- Give you a better chance at not fucking up your FFCS.
 
 ## Credits
 - captcha weights: **[VtopCaptchaSolver3.0](https://github.com/pratyush3124/VtopCaptchaSolver3.0)** by *Pratyush*
