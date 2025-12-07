@@ -291,16 +291,13 @@
               ).join('');
             }
 
-            const mContainer = document.getElementById('monthsContainer');
+            const mInfo = document.getElementById('monthsInfo');
             if (resultData.months.length === 0) {
-              mContainer.innerHTML = '<p style="color: #6b7280; font-size: 13px;">No months available</p>';
+              mInfo.textContent = 'No months available';
             } else {
-              mContainer.innerHTML = resultData.months.map(m => 
-                `<label class="checkbox-item">
-                  <input type="checkbox" value="${m.date}" checked>
-                  <span>${m.name}</span>
-                </label>`
-              ).join('');
+              mInfo.textContent = `Found ${resultData.months.length} months: ${resultData.months.map(m => m.name).join(', ')}`;
+              // Store months for extraction
+              state.months = resultData.months;
             }
 
             showStep(2);
@@ -330,8 +327,8 @@
       const selectedCGs = Array.from(document.querySelectorAll('#classGroupsContainer input:checked'))
         .map(cb => ({id: cb.value, name: cb.nextElementSibling.textContent}));
       
-      const selectedMonths = Array.from(document.querySelectorAll('#monthsContainer input:checked'))
-        .map(cb => ({date: cb.value, name: cb.nextElementSibling.textContent}));
+      // Use all available months (no user selection)
+      const selectedMonths = state.months || [];
 
       if (!selectedCGs.length || !selectedMonths.length) {
         setStatus('extractStatus', 'Select at least one class group and month', 'error');
@@ -353,6 +350,7 @@
         const extractionTime = new Date();
         
         for (const cg of selectedCGs) {
+          // Consistent JSON structure for all operations
           const calendarData = {
             lastUpdated: extractionTime.toLocaleString('en-US', {
               year: 'numeric',
@@ -540,7 +538,11 @@
         const escapedName = name.replace(/'/g, "\\'");
         return `
           <div class="file-item" style="flex-direction: column; align-items: stretch;">
-            <span class="file-name" title="${name}.json" style="margin-bottom: 8px;">${name}.json</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="file-name" title="${name}.json">${name}.json</span>
+              <button class="icon-btn" data-action="delete" data-name="${escapedName}" style="color: #dc2626;">Delete</button>
+            </div>
+            <div id="pr-status-${escapedName}" style="display: none; font-size: 12px; padding: 6px; border-radius: 4px; margin-bottom: 8px;"></div>
             <div class="file-actions">
               <div class="file-actions-row">
                 <button class="icon-btn" data-action="copy" data-name="${escapedName}">Copy</button>
@@ -567,6 +569,8 @@
             downloadICS(name);
           } else if (action === 'github') {
             await createGitHubPR(name);
+          } else if (action === 'delete') {
+            deleteFile(name);
           }
         });
       });
@@ -577,23 +581,25 @@
     }
 
     function copyFile(name) {
-      const data = state.files[name]?.data;
-      if (!data) {
+      const fileData = state.files[name];
+      if (!fileData || !fileData.data) {
         setStatus('extractStatus', 'File not found', 'error');
         return;
       }
-      navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+      const normalizedData = normalizeCalendarData(fileData.data);
+      navigator.clipboard.writeText(JSON.stringify(normalizedData, null, 2))
         .then(() => setStatus('extractStatus', 'Copied to clipboard', 'success'))
         .catch(() => setStatus('extractStatus', 'Failed to copy', 'error'));
     }
 
     function downloadFile(name) {
-      const data = state.files[name]?.data;
-      if (!data) {
+      const fileData = state.files[name];
+      if (!fileData || !fileData.data) {
         setStatus('extractStatus', 'File not found', 'error');
         return;
       }
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      const normalizedData = normalizeCalendarData(fileData.data);
+      const blob = new Blob([JSON.stringify(normalizedData, null, 2)], {type: 'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -603,12 +609,12 @@
     }
 
     function downloadICS(name) {
-      const file = state.files[name];
-      if (!file) {
+      const fileData = state.files[name];
+      if (!fileData || !fileData.data) {
         setStatus('extractStatus', 'File not found', 'error');
         return;
       }
-      const data = file.data;
+      const data = normalizeCalendarData(fileData.data);
       
       let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//VTOP Calendar//EN\r\n';
       ics += `X-WR-CALNAME:${data.semester} - ${data.classGroup}\r\n`;
@@ -652,15 +658,52 @@
       URL.revokeObjectURL(url);
     }
 
+    // Helper function to ensure consistent JSON structure
+    function normalizeCalendarData(data) {
+      if (!data) return null;
+      
+      // Ensure all required fields are present in correct order
+      return {
+        lastUpdated: data.lastUpdated || '',
+        lastUpdatedISO: data.lastUpdatedISO || new Date().toISOString(),
+        semester: data.semester || '',
+        classGroup: data.classGroup || '',
+        months: data.months || {}
+      };
+    }
+
+    function deleteFile(name) {
+      if (confirm(`Are you sure you want to delete "${name}.json"?`)) {
+        delete state.files[name];
+        chrome.storage.local.set({vtopCalendarFiles: state.files});
+        displayFiles();
+        if (Object.keys(state.files).length === 0) {
+          document.getElementById('step3').classList.add('hidden');
+        }
+        setStatus('extractStatus', 'File deleted successfully', 'success');
+      }
+    }
+
+    function setPRStatus(name, message, type) {
+      const statusEl = document.getElementById(`pr-status-${name.replace(/'/g, "\\'")}`);
+      if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.className = `status-${type}`;
+        statusEl.style.display = 'block';
+        statusEl.style.background = type === 'success' ? '#d1fae5' : type === 'error' ? '#fee2e2' : '#dbeafe';
+        statusEl.style.color = type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#1e40af';
+      }
+    }
+
     async function createGitHubPR(name) {
-      const file = state.files[name];
-      if (!file) {
+      const fileData = state.files[name];
+      if (!fileData || !fileData.data) {
         setStatus('extractStatus', 'File not found', 'error');
         return;
       }
 
       try {
-        setStatus('extractStatus', 'Preparing GitHub PR...', 'info');
+        setPRStatus(name, 'Preparing GitHub PR...', 'info');
         
         // Always clear method to force selection
         await window.VTOPCalendarDataUpdate.GitHubPRHandler.clearMethod();
@@ -674,14 +717,17 @@
         // Save the complete config (including method and token)
         await window.VTOPCalendarDataUpdate.GitHubPRHandler.saveConfig(newConfig);
         
-        // Create PR
-        setStatus('extractStatus', 'Creating pull request...', 'info');
-        const result = await window.VTOPCalendarDataUpdate.GitHubPRHandler.createPullRequest(file.data, name, newConfig);
+        // Create PR with normalized data
+        setPRStatus(name, 'Creating pull request...', 'info');
+        const normalizedData = normalizeCalendarData(fileData.data);
+        const result = await window.VTOPCalendarDataUpdate.GitHubPRHandler.createPullRequest(normalizedData, name, newConfig);
         
         if (result.success) {
           if (result.method === 'web') {
+            setPRStatus(name, result.message, 'success');
             setStatus('extractStatus', result.message, 'success');
           } else {
+            setPRStatus(name, `PR created successfully! #${result.prNumber}`, 'success');
             setStatus('extractStatus', `PR created successfully! #${result.prNumber}`, 'success');
             setTimeout(() => {
               if (confirm('Pull request created! Would you like to open it in a new tab?')) {
@@ -690,10 +736,12 @@
             }, 500);
           }
         } else {
+          setPRStatus(name, 'PR failed: ' + result.error, 'error');
           setStatus('extractStatus', 'PR failed: ' + result.error, 'error');
         }
       } catch (error) {
         if (error.message !== 'Cancelled') {
+          setPRStatus(name, 'Error: ' + error.message, 'error');
           setStatus('extractStatus', 'Error: ' + error.message, 'error');
         }
       }
@@ -707,6 +755,14 @@
         if (r.vtopCalendarFiles) {
           state.files = r.vtopCalendarFiles;
           console.log('Loaded files from storage, count:', Object.keys(state.files).length);
+          
+          // Normalize all loaded files to ensure consistent structure
+          Object.keys(state.files).forEach(filename => {
+            if (state.files[filename].data) {
+              state.files[filename].data = normalizeCalendarData(state.files[filename].data);
+            }
+          });
+          
           if (Object.keys(state.files).length > 0) {
             displayFiles();
             showStep(3);
